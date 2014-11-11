@@ -18,8 +18,8 @@ def mel_to_hz(frequency):
 
 
 def pre_emphasis_filter(sound, p=0.97):
-    filtered_sound = np.empty(sound.shape[0])
-    for i in range(1, sound.shape[0]):
+    filtered_sound = np.empty(len(sound))
+    for i in range(1, len(sound)):
         filtered_sound[i] = sound[i] - p*sound[i-1]
     return filtered_sound
 

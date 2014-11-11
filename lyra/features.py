@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.neural_network import BernoulliRBM
 
-from signal import SignalServer
+from signalserver import SignalServer
 from mfcc import calc_mfcc
 
 
@@ -13,6 +13,8 @@ learning_rate = 10e-4
 n_iter = 100
 latent_vector_size = 40
 
+#DEBUG
+vecbose_rbm = False
 
 def infer_latent(vectors, n_components):
     # BernoulliRBM allows vectors which the input is binary values or 
@@ -22,7 +24,7 @@ def infer_latent(vectors, n_components):
     # each element becomes less than or equal to 1
     vectors /= np.sum(vectors)
     rbm = BernoulliRBM(n_components=n_components, learning_rate=learning_rate,
-                       n_iter=n_iter, verbose=True)
+                       n_iter=n_iter, verbose=vecbose_rbm)
     rbm.fit(vectors)
     components = rbm.components_
     #normalize so that this sums to 1
@@ -55,8 +57,3 @@ def extract_features(filename, n_frames, n_blocks):
     #normalize
     feature_vector /= np.sum(feature_vector)
     return feature_vector
-
-
-filename = '../dataset/wavfiles/jazz/Candali-One_Masquerade.wav'
-feature_vector = extract_features(filename, n_frames=40, n_blocks=80)
-print(feature_vector)

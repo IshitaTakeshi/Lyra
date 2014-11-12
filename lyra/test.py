@@ -1,10 +1,26 @@
 import json
 import os
-import utils
 import glob
 
+import numpy as np
+
+import utils
 from extractor import extract
-import mds
+from mds import calculate_positions
+from plot import plot_with_labels
+
+
+def to_ndarray(path_feature_map):
+    for path, vector in path_feature_map.items():
+        path_feature_map[path] = np.array(vector)
+    return path_feature_map
+
+
+def to_list(path_feature_map):
+    for path, vector in path_feature_map.items():
+        path_feature_map[path] = vector.tolist()
+    return path_feature_map
+
 
 categories = [
     'KiminoShiranaiMonogatari', 'ReMIKUS', 'Haruhi', 'Reading', 'supercell'
@@ -14,10 +30,8 @@ for category in categories:
     wavpath = '../dataset/Music/{}'.format(category)
     jsonpath = './jsonfiles/{}.json'.format(category)
 
-    path_feature_map = extract(wavpath, n_frames=40, n_blocks=40)
-
-    for key, vector in path_feature_map.items():
-        path_feature_map[key] = vector.tolist()
+    path_feature_map = extract(wavpath, n_frames=40, n_blocks=10)    
+    path_feature_map = to_list(path_feature_map)
 
     json.dump(path_feature_map, open(jsonpath, 'w'))
 
@@ -37,7 +51,7 @@ for path, feature in path_feature_map.items():
     filenames.append(filename)
 features = np.array(features)
 
-positions = mds.calculate_positions(features)
+positions = calculate_positions(features)
 plot_with_labels(positions, filenames)
 
 #keys = list(path_feature_map.keys())

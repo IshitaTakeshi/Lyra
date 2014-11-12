@@ -16,9 +16,3 @@ def search_k_nearest(path_feature_map, query, k=None):
     #sort by distance
     distances = sorted(distances, key=lambda x: x[1])
     return distances[:k]
-
-
-def to_ndarray(path_feature_map):
-    for path, vector in path_feature_map.items():
-        path_feature_map[path] = np.array(vector)
-    return path_feature_map

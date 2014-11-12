@@ -17,7 +17,6 @@ latent_vector_size = 40
 vecbose_rbm = False
 
 
-
 def infer_latent(vectors, n_components):
     # BernoulliRBM allows vectors which the input is binary values or 
     # values between 0 and 1

@@ -13,8 +13,10 @@ learning_rate = 10e-4
 n_iter = 100
 latent_vector_size = 40
 
-#DEBUG
+#for debug
 vecbose_rbm = False
+
+
 
 def infer_latent(vectors, n_components):
     # BernoulliRBM allows vectors which the input is binary values or 
@@ -28,7 +30,7 @@ def infer_latent(vectors, n_components):
     rbm.fit(vectors)
     components = rbm.components_
     #normalize so that this sums to 1
-    rbm.components_ / np.sum(rbm.components_)
+    #rbm.components_ / np.sum(rbm.components_)
     return components
 
 
@@ -41,11 +43,11 @@ def extract_features(filename, n_frames, n_blocks):
     n_blocks: The number of blocks. 
     """
     signal = SignalServer(filename)
-
+    
     last = signal.get_last_start_point_msec(n_frames)
     start_points = np.random.randint(low=0, high=last, size=n_blocks)
 
-    feature_vector = np.zeros(latent_vector_size) 
+    vectors = []
     for i in range(n_blocks):
         frames = signal.get_consecutive_frames(n_frames, start_points[i])
         block = [calc_mfcc(frame, n_cepstrum=n_cepstrum) for frame in frames]
@@ -53,7 +55,10 @@ def extract_features(filename, n_frames, n_blocks):
         latent_vectors = infer_latent(block, latent_vector_size)
         #sum latent vectors
         vector = np.sum(latent_vectors, axis=0)
-        feature_vector += vector
+        vectors.append(vector)
+    vectors = np.array(vectors)
+    vectors = infer_latent(vectors, int(n_blocks/2))
+    vector = np.sum(vectors, axis=0)
     #normalize
-    feature_vector /= np.sum(feature_vector)
-    return feature_vector
+    vector = vector/np.sum(vector)
+    return vector

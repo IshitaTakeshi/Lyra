@@ -3,35 +3,104 @@ from multiprocessing import Pool, cpu_count
 
 import numpy as np
 
-from features import extract_features
+from features import FeatureExtractor
 import utils
 from path import get_wave_paths
+from autoencoder import Autoencoder
+
+
+n_iter = 40
+n_components = 30
+
+
+def extraction_process(music_root, n_frames, n_blocks, learning_rate):
+    paths = get_wave_paths(music_root)
+    path_feature_map = extraction_process_(paths, n_frames, n_blocks)
+    path_feature_map, error = compress_(path_feature_map, learning_rate)
+    return path_feature_map, error 
+
+
+def compress_(path_feature_map, learning_rate):
+    feature_vectors = np.array(list(path_feature_map.values()))
+    vector_size = feature_vectors.shape[2]
+    feature_vectors = feature_vectors.reshape(-1, vector_size)
+    feature_vectors /= np.sum(feature_vectors)
+
+    autoencoder = Autoencoder(
+        feature_vectors, 
+        n_visible=feature_vectors.shape[1], 
+        n_hidden=n_components,
+        learning_rate=learning_rate
+    )
+
+    for epoch in range(n_iter):
+        autoencoder.train() 
+
+    for path, vector in path_feature_map.items():
+        v = autoencoder.get_hidden_values(vector)
+        path_feature_map[path] = v
+    
+    error = autoencoder.negative_log_likelihood()
+    return path_feature_map, error
+
+
+def extraction_process_(paths, n_frames, n_blocks):
+    """
+    An single process of feature extraction.
+    """
+
+    extractor = FeatureExtractor(n_frames, n_blocks) 
+
+    path_feature_map = {}
+    for i, filepath in enumerate(paths):
+        feature_vector = extractor.extract(filepath)
+        path_feature_map[filepath] = feature_vector
+    return path_feature_map
 
 
 def extract_(args):
-    def process(paths, n_frames, n_blocks):
-        path_feature_map = {}
-        for i, filepath in enumerate(paths):
-            feature_vector = extract_features(filepath, 
-                                              n_frames=n_frames, 
-                                              n_blocks=n_blocks)
-            path_feature_map[filepath] = feature_vector
-        return path_feature_map
-    return process(*args)
+    return extraction_process_(*args)
 
 
-def extract(music_root, n_frames, n_blocks):
-    paths = get_wave_paths(music_root)
+#TODO Rename this or features.Featureextractor
+class Extractor(object):
+    def __init__(self, n_frames, n_blocks, learning_rate=0.1, 
+                 n_cores=None, verbose=False):
+        self.n_frames = n_frames
+        self.n_blocks = n_blocks
+        
+        if(n_cores is None):
+            n_cores = cpu_count()
 
-    n_cores = cpu_count()    
-    paths_ = np.array_split(paths, n_cores)
-    paths_ = [paths.tolist() for paths in paths_]
+        self.n_cores = n_cores
+        self.learning_rate = learning_rate
     
-    args = []
-    for paths in paths_:
-        args.append([paths, n_frames, n_blocks])
-     
-    pool = Pool()
-    dicts = pool.map(extract_, args) 
-    path_feature_map = utils.merge_multiple_dicts(dicts)
-    return path_feature_map
+    def extract_features(self, music_root):
+        paths = get_wave_paths(music_root)
+
+        paths_ = np.array_split(paths, self.n_cores)
+        paths_ = [paths.tolist() for paths in paths_]
+
+        args = []
+        for paths in paths_:
+            args.append([paths, self.n_frames, self.n_blocks])
+
+        pool = Pool(self.n_cores)
+        dicts = pool.map(extract_, args)
+
+        path_feature_map = utils.merge_multiple_dicts(dicts)
+        return path_feature_map
+
+    def compress_features(self, path_feature_map):
+        path_feature_map, error = compress_(path_feature_map, 
+                                            self.learning_rate)
+        return path_feature_map, error
+
+    def extract(self, music_root):
+        """
+        Extract features with multiprocessing
+        """
+
+        path_feature_map = self.extract_features(music_root)
+        path_feature_map, error = self.compress_features(path_feature_map)
+        return path_feature_map, error

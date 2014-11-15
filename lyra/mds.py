@@ -12,10 +12,10 @@ def calculate_positions(vectors):
             for j in range(n_vectors):
                 matrix[i][j] = calc_distance(vectors[i], vectors[j])
         return matrix
-    
+
     distance_matrix = calc_distance_matrix(vectors)
 
-    mds = manifold.MDS(n_components=2, max_iter=3000, eps=1e-9, 
+    mds = manifold.MDS(n_components=2, max_iter=3000, eps=1e-9,
                        dissimilarity="precomputed", n_jobs=1)
     mds.fit(distance_matrix)
     positions = mds.embedding_

@@ -11,7 +11,7 @@ def plot_with_labels(positions, labels):
 
     for label, position in zip(labels, positions):
         pyplot.annotate(
-            label, xy=position, 
+            label, xy=position,
             bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.5),
             arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0')
         )

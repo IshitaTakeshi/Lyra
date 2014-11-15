@@ -1,63 +1,40 @@
 import numpy as np
-from sklearn.decomposition import PCA
-from sklearn.neural_network import BernoulliRBM
 
 from signalserver import SignalServer
-from mfcc import calc_mfcc
+from mfcc import MFCC
 
 
-#FIXME sometimes pseudo-likelihood holds 
-#an unreasonable value like -20917.83 
-n_cepstrum = 40
-learning_rate = 10e-4
-n_iter = 100
-latent_vector_size = 40
+class FeatureExtractor(object):
+    def __init__(self, n_frames, n_blocks,
+                 n_cepstrum=40, n_filters=26):
+        """
+        n_frames: The number of frames consisted in one block.
+        n_frames consecutive frames form one block
+        n_blocks: The number of blocks.
+        """
+        self.mfcc = MFCC(n_cepstrum, n_filters)
+        self.n_frames = n_frames
+        self.n_blocks = n_blocks
 
-#for debug
-vecbose_rbm = False
+    def extract(self, filepath):
+        # TODO explain the extraction algorithm
+        """
+        filepath: The path to an input file.
+        """
 
+        signal = SignalServer(filepath)
 
-def infer_latent(vectors, n_components):
-    # BernoulliRBM allows vectors which the input is binary values or 
-    # values between 0 and 1
-    
-    # divide by its sum so that 
-    # each element becomes less than or equal to 1
-    vectors /= np.sum(vectors)
-    rbm = BernoulliRBM(n_components=n_components, learning_rate=learning_rate,
-                       n_iter=n_iter, verbose=vecbose_rbm)
-    rbm.fit(vectors)
-    components = rbm.components_
-    #normalize so that this sums to 1
-    #rbm.components_ / np.sum(rbm.components_)
-    return components
+        last = signal.get_last_start_point(self.n_frames)
+        start_points = np.random.randint(low=0, high=last, size=self.n_frames)
 
+        mfcc = []
+        for start_point in start_points:
+            frame = signal.get_frame(start_point)
+            mfcc.append(self.mfcc.calc(frame))
+        return np.array(mfcc)
 
-def extract_features(filename, n_frames, n_blocks):
-    #TODO explain the extraction algorithm 
-    """
-    filename: The input file name.
-    n_frames: The number of frames consisted in one block.
-    n_frames consecutive frames form one block
-    n_blocks: The number of blocks. 
-    """
-    signal = SignalServer(filename)
-    
-    last = signal.get_last_start_point_msec(n_frames)
-    start_points = np.random.randint(low=0, high=last, size=n_blocks)
-
-    vectors = []
-    for i in range(n_blocks):
-        frames = signal.get_consecutive_frames(n_frames, start_points[i])
-        block = [calc_mfcc(frame, n_cepstrum=n_cepstrum) for frame in frames]
-        block = np.array(block)
-        latent_vectors = infer_latent(block, latent_vector_size)
-        #sum latent vectors
-        vector = np.sum(latent_vectors, axis=0)
-        vectors.append(vector)
-    vectors = np.array(vectors)
-    vectors = infer_latent(vectors, int(n_blocks/2))
-    vector = np.sum(vectors, axis=0)
-    #normalize
-    vector = vector/np.sum(vector)
-    return vector
+        #frames = []
+        #for start_point in start_points:
+        #    consecutive_frames = signal.get_consecutive_frames(self.n_frames, start_point)
+        #    frames += [self.mfcc.calc(frame) for frame in consecutive_frames]
+        #return feature_vector, total_error

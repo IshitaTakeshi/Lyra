@@ -19,8 +19,8 @@ def read(filename, nchannels):
     nframes = wavefile.getnframes()
     data = wavefile.readframes(nframes)
     wavefile.close()
-    
-    data = np.frombuffer(data, dtype='int16', count=-1) 
+
+    data = np.frombuffer(data, dtype='int16', count=-1)
     data = data / 32768
 
     if(nchannels == 1):

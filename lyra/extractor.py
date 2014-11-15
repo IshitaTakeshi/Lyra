@@ -24,7 +24,9 @@ def compress_(path_feature_map, learning_rate):
     feature_vectors = np.array(list(path_feature_map.values()))
     vector_size = feature_vectors.shape[2]
     feature_vectors = feature_vectors.reshape(-1, vector_size)
-    feature_vectors /= np.sum(feature_vectors)
+
+    #normalize so that this sums 1
+    feature_vectors /= np.sum(feature_vectors) 
 
     autoencoder = Autoencoder(
         feature_vectors, 

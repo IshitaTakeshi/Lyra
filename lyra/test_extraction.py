@@ -13,7 +13,7 @@ def test_extraction(music_root):
 
     print("extracting from {}".format(music_root))
 
-    extractor = Extractor(n_frames=40, n_blocks=100, learning_rate=0.02,
+    extractor = Extractor(n_frames=40, n_blocks=100, learning_rate=0.00050,
                           verbose=True)
     path_feature_map, error = extractor.extract(music_root)
 

@@ -1,5 +1,6 @@
 from subprocess import call
 from multiprocessing import Pool, cpu_count
+from copy import copy
 
 import numpy as np
 
@@ -13,20 +14,19 @@ n_iter = 40
 n_components = 30
 
 
-def extraction_process(music_root, n_frames, n_blocks, learning_rate):
-    paths = get_wave_paths(music_root)
-    path_feature_map = extraction_process_(paths, n_frames, n_blocks)
-    path_feature_map, error = compress_(path_feature_map, learning_rate)
-    return path_feature_map, error 
-
-
 def compress_(path_feature_map, learning_rate):
+    path_feature_map = copy(path_feature_map)
+
     feature_vectors = np.array(list(path_feature_map.values()))
     vector_size = feature_vectors.shape[2]
     feature_vectors = feature_vectors.reshape(-1, vector_size)
 
-    #normalize so that this sums 1
-    feature_vectors /= np.sum(feature_vectors) 
+    feature_vectors /= np.sum(feature_vectors)
+    #feature_vectors /= np.mean(feature_vectors)
+    #feature_vectors = np.std(feature_vectors, axis=0)
+    #print(np.std(feature_vectors, axis=0))
+    #print(np.sum(feature_vectors, axis=0))
+    #print(feature_vectors)
 
     autoencoder = Autoencoder(
         feature_vectors, 
@@ -43,6 +43,7 @@ def compress_(path_feature_map, learning_rate):
         path_feature_map[path] = v
     
     error = autoencoder.negative_log_likelihood()
+    error = abs(error)
     return path_feature_map, error
 
 
@@ -68,6 +69,9 @@ def extract_(args):
 class Extractor(object):
     def __init__(self, n_frames, n_blocks, learning_rate=0.1, 
                  n_cores=None, verbose=False):
+        """
+        All cores used if n_cores is None
+        """
         self.n_frames = n_frames
         self.n_blocks = n_blocks
         
@@ -77,7 +81,7 @@ class Extractor(object):
         self.n_cores = n_cores
         self.learning_rate = learning_rate
     
-    def extract_features(self, music_root):
+    def extract_(self, music_root):
         paths = get_wave_paths(music_root)
 
         paths_ = np.array_split(paths, self.n_cores)
@@ -93,7 +97,7 @@ class Extractor(object):
         path_feature_map = utils.merge_multiple_dicts(dicts)
         return path_feature_map
 
-    def compress_features(self, path_feature_map):
+    def compress_(self, path_feature_map):
         path_feature_map, error = compress_(path_feature_map, 
                                             self.learning_rate)
         return path_feature_map, error
@@ -103,6 +107,47 @@ class Extractor(object):
         Extract features with multiprocessing
         """
 
-        path_feature_map = self.extract_features(music_root)
-        path_feature_map, error = self.compress_features(path_feature_map)
+        path_feature_map = self.extract_(music_root)
+        path_feature_map, error = self.compress_(path_feature_map)
         return path_feature_map, error
+
+
+class GridSearch(object):
+    """
+    Evaluates parameters 
+    """
+    def __init__(self, music_root, n_frames, n_blocks, 
+                 n_trials=1, verbose=False):
+        paths = get_wave_paths(music_root)
+        extractor = Extractor(n_frames, n_blocks)
+        self.path_feature_map = extractor.extract_(music_root)
+        #self.path_feature_map = extraction_process_(paths, n_frames, n_blocks)
+        self.n_trials = n_trials
+        self.verbose = verbose
+
+    def try_(self, learning_rate):
+        total_error = 0
+        for i in range(self.n_trials):
+            path_feature_map, error = compress_(self.path_feature_map, 
+                                                learning_rate)
+            total_error += error
+        return total_error
+
+    def search(self, candidate_params):
+        assert (candidate_params > 0).all()
+
+        min_error = float('inf')
+        argmin = 0
+        errors = []
+        for learning_rate in candidate_params:
+            error = self.try_(learning_rate)
+            errors.append(error)
+            if(error < min_error):
+                min_error = error 
+                argmin = learning_rate
+            
+            if(self.verbose):
+                print("learning rate:{:.5f}"
+                      " error:{:5.3f}".format(learning_rate, error))
+
+        return errors, argmin, min_error

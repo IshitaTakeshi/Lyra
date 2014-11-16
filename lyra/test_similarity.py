@@ -32,13 +32,13 @@ def plot(features, magnification=10e7):
     positions = calculate_positions(features)
     plot_with_labels(positions, filenames)
 
-
 dicts = []
 for path in glob.glob('./jsonfiles/*.json'):
     dicts.append(json.load(open(path, 'r')))
 path_feature_map = utils.merge_multiple_dicts(dicts)
 path_feature_map = to_ndarray(path_feature_map)
 
+#TODO Show error messages
 key = sys.argv[1]
 query = path_feature_map[key]
 path_feature_map = to_ndarray(path_feature_map)

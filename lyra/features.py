@@ -3,6 +3,7 @@ import numpy as np
 from signalserver import SignalServer
 from mfcc import MFCC
 
+#np.set_printoptions(threshold=np.nan, linewidth=np.inf)
 
 class FeatureExtractor(object):
     def __init__(self, n_frames, n_blocks,
@@ -27,11 +28,13 @@ class FeatureExtractor(object):
         last = signal.get_last_start_point(self.n_frames)
         start_points = np.random.randint(low=0, high=last, size=self.n_frames)
 
-        mfcc = []
+        features = []
         for start_point in start_points:
             frame = signal.get_frame(start_point)
-            mfcc.append(self.mfcc.calc(frame))
-        return np.array(mfcc)
+            mfcc = self.mfcc.calc(frame)
+            features.append(mfcc)
+        features = np.array(features)
+        return features
 
         #frames = []
         #for start_point in start_points:

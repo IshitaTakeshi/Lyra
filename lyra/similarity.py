@@ -2,7 +2,6 @@
 import numpy as np
 
 from scale import calc_distance
-from plot import plot_with_labels
 
 
 def search_k_nearest(path_feature_map, query, k=None):

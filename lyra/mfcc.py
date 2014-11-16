@@ -4,6 +4,8 @@ import numpy as np
 from numpy.fft import fft, ifft, rfft
 from scipy.fftpack import dct
 from scipy.cluster.vq import kmeans, whiten
+from scipy.signal import lfilter, hamming
+
 
 
 MEL_SCALE = 1127.010480
@@ -17,6 +19,28 @@ def mel_to_hz(frequency):
     return 700 * (np.power(10, frequency/MEL_SCALE) - 1)
 
 
+def pre_emphasis_filter(sound, p=0.97):
+# Copyright (c) 2008 Cournapeau David
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+    return lfilter([1., -p], 1, sound)
+
 
 class MFCC(object):
     def __init__(self, n_cepstrum=8, n_filters=26):
@@ -24,12 +48,6 @@ class MFCC(object):
         self.n_filters = n_filters
         #for dct3 transform
         self.dct_matrix = self.generate_dct_matrix()
-
-    def pre_emphasis_filter(self, sound, p=0.97):
-        filtered_sound = np.empty(len(sound))
-        for i in range(1, len(sound)):
-            filtered_sound[i] = sound[i] - p*sound[i-1]
-        return filtered_sound
 
     def generate_melfilterbank(self, sound_length,
                                lower_frequency=133.3333,
@@ -85,7 +103,7 @@ class MFCC(object):
         segment_length = len(sound_segment)
         available_range = int(segment_length/2)
 
-        sound_segment = self.pre_emphasis_filter(sound_segment)
+        #sound_segment = pre_emphasis_filter(sound_segment)
 
         # windowing
         window = np.hamming(segment_length)

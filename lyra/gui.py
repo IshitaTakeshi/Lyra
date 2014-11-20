@@ -51,9 +51,10 @@ class MusicBar(Frame):
         play_button.bind("<Button-1>", self.play)
         
         #image = tkinter.PhotoImage(file=icon_pause)
-        pause_button = Button(self, text="Pause")#image=image)
-        pause_button.pack(side=LEFT, padx=padx)
-        pause_button.bind("<Button-1>", self.pause)
+        #pause_button = Button(self, text="Pause")#image=image)
+        #pause_button.pack(side=LEFT, padx=padx)
+        #pause_button.bind("<Button-1>", self.pause)
+        #self.pausing = False
         
         #image = tkinter.PhotoImage(file=icon_stop)
         stop_button = Button(self, text="Stop")#image=image)
@@ -66,10 +67,15 @@ class MusicBar(Frame):
         self.player.play()
 
     def stop(self, event):
-        self.player.quit()
+        self.player.stop()
 
-    def pause(self, event):
-        self.player.pause()
+    #def pause(self, event):
+    #    if(self.pausing):
+    #        self.player.unpause()
+    #    else:
+    #        self.player.pause()
+
+    #    self.pausing = not self.pausing
 
 
 class MusicList(tkinter.Toplevel):

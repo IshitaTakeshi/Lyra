@@ -1,4 +1,5 @@
 import os
+import pygame
 
 from subprocess import call
 
@@ -9,21 +10,23 @@ fifo = os.path.join(home, '.player-control')
 
 class Player(object):
     def __init__(self, filepath):
-        if not(os.path.exists(fifo)):
-            call(['mkfifo', fifo])
-
         self.filepath = filepath
+        pygame.init()
 
     def play(self):
-        c = 'mplayer -slave -input file={}'.format(fifo)
-        c = c.split(' ')
-        c += [self.filepath]
-        call(c)
-    
-    def pause(self):
-        c = 'echo "pause" > {}'.format(fifo)
-        call(c.split(' '))
+        pygame.mixer.init()
+        pygame.mixer.music.load(self.filepath)
+        pygame.mixer.music.play()
 
-    def quit(self):
-        c = 'echo "quit" > {}'.format(fifo)
-        call(c.split(' '))
+    def pause(self):
+        pygame.mixer.pause()
+
+    def unpause(self):
+        pygame.mixer.unpause()
+
+    def stop(self):
+        pygame.mixer.quit()
+
+    def __exit__(self):
+        print("DEBUG: Exit Audio")
+        pygame.quit()

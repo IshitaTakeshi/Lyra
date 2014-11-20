@@ -35,9 +35,3 @@ class FeatureExtractor(object):
             features.append(mfcc)
         features = np.array(features)
         return features
-
-        #frames = []
-        #for start_point in start_points:
-        #    consecutive_frames = signal.get_consecutive_frames(self.n_frames, start_point)
-        #    frames += [self.mfcc.calc(frame) for frame in consecutive_frames]
-        #return feature_vector, total_error

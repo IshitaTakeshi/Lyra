@@ -1,20 +1,10 @@
 import json
 
-
-def to_list(path_feature_map):
-    for path, vector in path_feature_map.items():
-        path_feature_map[path] = vector.tolist()
-    return path_feature_map
-
-
-def to_ndarray(path_feature_map):
-    for path, vector in path_feature_map.items():
-        path_feature_map[path] = np.array(vector)
-    return path_feature_map
+from utils import to_ndarray, to_list
 
 
 def load_json(filepath):
-    path_feature_map = json.dump(open(filepath, 'w'))
+    path_feature_map = json.load(open(filepath, 'r'))
     path_feature_map = to_ndarray(path_feature_map)
     return path_feature_map
 

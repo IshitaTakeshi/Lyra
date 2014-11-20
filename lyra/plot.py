@@ -1,9 +1,14 @@
+import os
+
+from mds import calculate_positions
+
 from matplotlib import font_manager, text, pyplot
 import matplotlib
+import numpy as np
 
 
 def plot_with_labels(positions, labels):
-    #to show Japanese texts
+    #to show Japanese sentences
     matplotlib.rcParams['font.family'] = 'IPAexGothic'
 
     pyplot.subplots_adjust(bottom=0.1)
@@ -16,3 +21,21 @@ def plot_with_labels(positions, labels):
             arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0')
         )
     pyplot.show()
+
+
+def plot(path_feature_map):
+    features = []
+    filenames = []
+    for path, feature in path_feature_map.items():
+        features.append(feature)
+
+        filename = os.path.basename(path)
+        filenames.append(filename)
+
+    features = np.array(features)
+    indices = np.random.randint(low=0, high=len(features), size=20)
+    features = np.take(features, indices, axis=0)
+    filenames = np.take(filenames, indices)
+
+    positions = calculate_positions(features)
+    plot_with_labels(positions, filenames)

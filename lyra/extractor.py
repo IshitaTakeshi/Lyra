@@ -147,7 +147,7 @@ class GridSearch(object):
                 argmin = learning_rate
             
             if(self.verbose):
-                print("learning rate:{:.5f}"
-                      " error:{:5.3f}".format(learning_rate, error))
+                print("learning rate:{:.10f}"
+                      " error:{:.10f}".format(learning_rate, error))
 
         return errors, argmin, min_error

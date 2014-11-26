@@ -8,6 +8,7 @@ def get_wave_paths(music_root):
             if not(filename.endswith('.wav') or filename.endswith('.wave')):
                 continue
             filepath = os.path.join(dirpath, filename)
+            filepath = os.path.abspath(filepath)
             paths.append(filepath)
     return paths
 

@@ -11,6 +11,7 @@ class MLInterface(object):
         self.extractor = Extractor(n_frames, n_blocks, learning_rate, 
                                    verbose=True)
         self.music_root = None
+        self.query_filepath = None
         self.path_feature_map = {}
    
     def set_music_root(self, music_root):
@@ -33,20 +34,21 @@ class MLInterface(object):
             raise IOError("{} does not exist.".format(filename))
 
         self.path_feature_map = load_json(filepath)
+    
+    def set_query(self, query_filepath):
+        self.query_filepath = query_filepath
 
-    def search(self, query_filepath, n_results=None):
+    def search(self, n_results=None):
         """
-        query_filepath: path to query
+        self.query_filepath: path to query
         k: number of results
         """
-        
-        if not(query_filepath in self.path_feature_map):
-            raise ValueError(
-                "{} is not in the extracted music list".format(query_filepath))
+        if(self.query_filepath is None):
+            print("Set a query first.")
 
         if(n_results is None):
             n_results = len(self.path_feature_map)
 
-        k_nearest = search_k_nearest(self.path_feature_map, query_filepath, 
+        k_nearest = search_k_nearest(self.path_feature_map, self.query_filepath, 
                                      n_results)
         return k_nearest

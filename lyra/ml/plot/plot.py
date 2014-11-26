@@ -1,10 +1,10 @@
 import os
 
-from mds import calculate_positions
-
 from matplotlib import font_manager, text, pyplot
 import matplotlib
 import numpy as np
+
+from .mds import calculate_positions
 
 
 def plot_with_labels(positions, labels):

@@ -4,10 +4,10 @@ from copy import copy
 
 import numpy as np
 
-from features import FeatureExtractor
-import utils
-from path import get_wave_paths
-from autoencoder import Autoencoder
+from .features import FeatureExtractor
+from . import utils
+from .path import get_wave_paths
+from .autoencoder import Autoencoder
 
 
 n_iter = 40
@@ -47,27 +47,26 @@ def compress_(path_feature_map, learning_rate):
     return path_feature_map, error
 
 
-def extraction_process_(paths, n_frames, n_blocks):
-    """
-    An single process of feature extraction.
-    """
-
-    extractor = FeatureExtractor(n_frames, n_blocks) 
-
-    path_feature_map = {}
-    for i, filepath in enumerate(paths):
-        feature_vector = extractor.extract(filepath)
-        path_feature_map[filepath] = feature_vector
-    return path_feature_map
-
-
 def extract_(args):
+    def extraction_process_(paths, n_frames, n_blocks):
+        """
+        An single process of feature extraction.
+        """
+
+        extractor = FeatureExtractor(n_frames, n_blocks) 
+
+        path_feature_map = {}
+        for i, filepath in enumerate(paths):
+            feature_vector = extractor.extract(filepath)
+            path_feature_map[filepath] = feature_vector
+        return path_feature_map
+
     return extraction_process_(*args)
 
 
 #TODO Rename this or features.Featureextractor
 class Extractor(object):
-    def __init__(self, n_frames, n_blocks, learning_rate=0.1, 
+    def __init__(self, n_frames, n_blocks, learning_rate, 
                  n_cores=None, verbose=False):
         """
         All cores used if n_cores is None
@@ -83,6 +82,8 @@ class Extractor(object):
     
     def extract_(self, music_root):
         paths = get_wave_paths(music_root)
+        if(len(paths) == 0):
+            raise ValueError("No music files found.")
 
         paths_ = np.array_split(paths, self.n_cores)
         paths_ = [paths.tolist() for paths in paths_]
@@ -121,7 +122,6 @@ class GridSearch(object):
         paths = get_wave_paths(music_root)
         extractor = Extractor(n_frames, n_blocks)
         self.path_feature_map = extractor.extract_(music_root)
-        #self.path_feature_map = extraction_process_(paths, n_frames, n_blocks)
         self.n_trials = n_trials
         self.verbose = verbose
 

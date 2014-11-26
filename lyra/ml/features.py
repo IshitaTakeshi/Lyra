@@ -1,9 +1,11 @@
 import numpy as np
 
-from signalserver import SignalServer
-from mfcc import MFCC
+from .signalserver import SignalServer
+from .mfcc import MFCC
+
 
 #np.set_printoptions(threshold=np.nan, linewidth=np.inf)
+
 
 class FeatureExtractor(object):
     def __init__(self, n_frames, n_blocks,

@@ -1,6 +1,6 @@
 import json
 
-from utils import to_ndarray, to_list
+from .utils import to_ndarray, to_list
 
 
 def load_json(filepath):

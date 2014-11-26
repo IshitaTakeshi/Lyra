@@ -2,7 +2,7 @@ from __future__ import division
 
 import numpy as np
 
-import waveio
+from . import waveio
 
 
 #TODO separate to core and interface
@@ -55,6 +55,9 @@ class SignalServer(object):
         return np.array(frames)
 
     def get_frame(self, start_point):
+        """
+        Get one frame from the signal array
+        """
         last = self.get_last_start_point(1)
         if(start_point > last):
             raise ValueError("The start point is too late.")

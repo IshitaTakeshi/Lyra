@@ -1,10 +1,14 @@
 from sklearn import manifold
 import numpy as np
 
-from scale import calc_distance
+from ..distance import calc_distance
 
 
 def calculate_positions(vectors):
+    """
+    Calculates positions of mapped features in 2D space.
+    """
+
     def calc_distance_matrix(vectors):
         n_vectors = len(vectors)
         matrix = np.zeros((n_vectors, n_vectors))

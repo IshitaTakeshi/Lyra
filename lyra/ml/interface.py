@@ -45,6 +45,7 @@ class MLInterface(object):
         """
         if(self.query_filepath is None):
             print("Set a query first.")
+            return
 
         if(n_results is None):
             n_results = len(self.path_feature_map)

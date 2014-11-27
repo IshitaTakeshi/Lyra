@@ -163,7 +163,7 @@ class SelectMusicRootScreen(Screen):
         if(DEBUG):
             self.filechooser = FileChooserListView(path=DEBUG_DIR)
         else:
-            self.filechooser = FileChooserListView(path=CURRENT_DIR)
+            self.filechooser = FileChooserListView(path=HOME_DIR)
 
         self.explanation_window = Label(text='Select a music file', 
                                         size_hint=(1.0, 0.2))
@@ -225,7 +225,11 @@ class SelectMusicRootScreen(Screen):
     def analyze(self, instance):
         self.show_message("Aanalyzing...")
 
-        self.music_engine.extract_features()
+        try:
+            self.music_engine.extract_features()
+        except:
+            self.show_message("No wav music found. Choose another directory.")
+            return
         
         self.next_button.disabled = False 
         self.show_message("Finished")
@@ -375,10 +379,7 @@ class SearchScreen(Screen):
 
         self.music_engine = music_engine
 
-        if(DEBUG):
-            self.filechooser = FileChooserListView(path=DEBUG_DIR)
-        else:
-            self.filechooser = FileChooserListView(path=CURRENT_DIR)
+        self.filechooser = FileChooserListView(path=music_engine.music_root)
 
         self.explanation_window = Label(text='Select a music file', 
                                         size_hint=(1.0, 0.2))
@@ -418,7 +419,10 @@ class SearchScreen(Screen):
         layout.add_widget(button_layout)
 
         self.add_widget(layout)
-     
+    
+    def on_enter(self):
+        self.filechooser.path = self.music_engine.music_root
+
     def show_message(self, message):
         self.explanation_window.text = message
     

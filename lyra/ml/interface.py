@@ -10,11 +10,12 @@ class MLInterface(object):
     def __init__(self, n_frames=40, n_blocks=100, learning_rate=0.00053):
         self.extractor = Extractor(n_frames, n_blocks, learning_rate, 
                                    verbose=True)
-        self.music_root = None
+        self.music_root = os.getcwd() 
         self.query_filepath = None
         self.path_feature_map = {}
    
     def set_music_root(self, music_root):
+        print("The music root is set: {}".format(music_root))
         self.music_root = music_root
         
     def extract_features(self):

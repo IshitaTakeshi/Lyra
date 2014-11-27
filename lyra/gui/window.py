@@ -41,7 +41,7 @@ if not(os.path.exists(DATA_DIR)):
     os.mkdir(DATA_DIR)
 
 #DEBUG
-DEBUG = True
+DEBUG = False
 if(DEBUG):
     from kivy.core.text import LabelBase, DEFAULT_FONT
     from kivy.resources import resource_add_path

@@ -18,6 +18,7 @@ from kivy.core.audio import SoundLoader
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout 
 from kivy.uix.filechooser import FileChooserListView
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.popup import Popup
 
 from .spacer import HorizontalSpacer, VerticalSpacer
@@ -109,16 +110,18 @@ class LoadDataFileScreen(Screen):
 
         self.filechooser = FileChooserListView(path=DATA_DIR, 
                                                size_hint=(1.0, 0.7))
-        self.filechooser.bind(selection=self.on_file_selected)
         
         self.explanation_window = Label(text='Select a data file', 
                                         size_hint=(1.0, 0.1), 
-                                        font_size=EXPLANATION_FONT_SIZE)
+                                        font_size=EXPLANATION_FONT_SIZE,
+                                        halign='center')
 
         back_button = ChangeScreenButton(manager=manager,
                                          destination=first_selection,
                                          text="Back")
 
+        select_button = Button(text="Select")
+        select_button.bind(on_press=self.select)
         self.load_button = Button(text="Load")
         self.load_button.bind(on_press=self.load)
         self.load_button.disabled = True 
@@ -128,6 +131,7 @@ class LoadDataFileScreen(Screen):
                                   spacing=30,
                                   padding=(10, 10, 10, 10))
         button_layout.add_widget(back_button)
+        button_layout.add_widget(select_button)
         button_layout.add_widget(self.load_button)
         
         layout.add_widget(self.filechooser)
@@ -136,7 +140,7 @@ class LoadDataFileScreen(Screen):
 
         self.add_widget(layout)
 
-    def on_file_selected(self, path, selection):
+    def select(self, instance):
         self.load_button.disabled = False
 
     def show_message(self, message):
@@ -174,7 +178,8 @@ class SelectMusicRootScreen(Screen):
 
         self.explanation_window = Label(text='Select a music file', 
                                         size_hint=(1.0, 0.2),
-                                        font_size=EXPLANATION_FONT_SIZE)
+                                        font_size=EXPLANATION_FONT_SIZE, 
+                                        halign='center')
 
         button_layout = BoxLayout(orientation='horizontal', 
                                   size_hint=(1.0, 0.3), 
@@ -186,7 +191,7 @@ class SelectMusicRootScreen(Screen):
                                               text="Back")
 
         select_button = Button(text="Select")
-
+        select_button.bind(on_press=self.select)
         self.analyze_button = Button(text="Analyze")
 
         self.next_button = ChangeScreenButton(manager=manager, 
@@ -195,7 +200,6 @@ class SelectMusicRootScreen(Screen):
         self.next_button.disabled = True
         self.analyze_button.disabled = True
         
-        select_button.bind(on_press=self.select)
         self.analyze_button.bind(on_press=self.analyze)
 
         button_layout.add_widget(back_button)
@@ -372,6 +376,7 @@ class ResultWindow(BoxLayout):
                                    cls=MusicRow)
 
         list_view = ListView(adapter=dict_adapter)
+
         self.close_button = Button(text="Close", size_hint=(1.0, 0.1))
         self.add_widget(list_view)
         self.add_widget(self.close_button)
@@ -392,18 +397,17 @@ class SearchScreen(Screen):
         self.music_engine = music_engine
 
         self.filechooser = FileChooserListView(path=music_engine.music_root)
+        self.filechooser.bind(selection=self.on_file_selected)
 
         self.explanation_window = Label(text='Select a music file', 
                                         size_hint=(1.0, 0.2), 
-                                        font_size=EXPLANATION_FONT_SIZE)
+                                        font_size=EXPLANATION_FONT_SIZE, 
+                                        halign='center')
 
         back_button = ChangeScreenButton(manager=manager,
                                          destination=select_music_root,
                                          text="Back")
         
-        select_music_button = Button(text="Select")
-        select_music_button.bind(on_press=self.select_music)
-
         self.search_button = Button(text="Search")
         self.search_button.bind(on_press=self.search)
         self.search_button.disabled = True
@@ -421,7 +425,6 @@ class SearchScreen(Screen):
                                               text="Back to home")
 
         button_layout.add_widget(back_button)
-        button_layout.add_widget(select_music_button)
         button_layout.add_widget(self.search_button)
         button_layout.add_widget(save_features_button)
         button_layout.add_widget(back_home_button)
@@ -439,9 +442,9 @@ class SearchScreen(Screen):
     def show_message(self, message):
         self.explanation_window.text = message
     
-    def select_music(self, instance):
+    def on_file_selected(self, path, selection):
         if(len(self.filechooser.selection) == 0):
-            self.show_message("Select a file, not a directory.")
+            self.show_message("Select a file.")
             self.search_button.disabled = True
             return
  

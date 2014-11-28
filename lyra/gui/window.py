@@ -1,6 +1,7 @@
 import os
 import time
 
+from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
 from kivy.lang import Builder
 from kivy.app import App
@@ -23,7 +24,7 @@ from .spacer import HorizontalSpacer, VerticalSpacer
 from ..ml import MLInterface
 
 
-window_size = (500, 350)
+window_size = (800, 450)
 Window.size = window_size
 
 
@@ -34,14 +35,15 @@ search_music = 'search_music'
 show_result = 'show_result'
 
 HOME_DIR = os.path.expanduser('~')
-CURRENT_DIR = os.getcwd()
 DATA_DIR = os.path.join(HOME_DIR, '.lyra')
+
+EXPLANATION_FONT_SIZE = '15sp'
 
 if not(os.path.exists(DATA_DIR)):
     os.mkdir(DATA_DIR)
 
 #DEBUG
-DEBUG = False
+DEBUG = True 
 if(DEBUG):
     from kivy.core.text import LabelBase, DEFAULT_FONT
     from kivy.resources import resource_add_path
@@ -105,13 +107,13 @@ class LoadDataFileScreen(Screen):
 
         layout = BoxLayout(orientation='vertical')
 
-        self.filechooser = FileChooserListView(
-            path=DATA_DIR,
-            size_hint=(1.0, 0.7))
+        self.filechooser = FileChooserListView(path=DATA_DIR, 
+                                               size_hint=(1.0, 0.7))
         self.filechooser.bind(selection=self.on_file_selected)
         
         self.explanation_window = Label(text='Select a data file', 
-                                        size_hint=(1.0, 0.1))
+                                        size_hint=(1.0, 0.1), 
+                                        font_size=EXPLANATION_FONT_SIZE)
 
         back_button = ChangeScreenButton(manager=manager,
                                          destination=first_selection,
@@ -147,11 +149,16 @@ class LoadDataFileScreen(Screen):
 
         try:
             self.music_engine.load(selected_path)
-        except Exception:
+        except Exception as e:
+            print("Exception at LoadDataFileScreen.load")
+            for arg in e.args:
+                print("\t{}".format(arg))
+
             self.show_message(
                 "The selected file is not following the Lyra's format.")
             return 
 
+        #Move to SearchScreen
         self.manager.current = search_music
 
 
@@ -166,7 +173,8 @@ class SelectMusicRootScreen(Screen):
             self.filechooser = FileChooserListView(path=HOME_DIR)
 
         self.explanation_window = Label(text='Select a music file', 
-                                        size_hint=(1.0, 0.2))
+                                        size_hint=(1.0, 0.2),
+                                        font_size=EXPLANATION_FONT_SIZE)
 
         button_layout = BoxLayout(orientation='horizontal', 
                                   size_hint=(1.0, 0.3), 
@@ -214,10 +222,11 @@ class SelectMusicRootScreen(Screen):
             self.analyze_button.disabled = True
             return
 
+
+        d = os.path.basename(selected_directory)
         self.show_message(
-            "'{}' is selected.\n"\
-            "Click [Analyze] to analyze music "\
-            "(this takes a few minute)".format(selected_directory))
+            "'{}' is selected.\n Click [Analyze] to analyze music "\
+            "(this takes a few minute)".format(d))
 
         self.music_engine.set_music_root(selected_directory)
         self.analyze_button.disabled = False
@@ -305,6 +314,9 @@ class PlayButton(Button):
         self.bind(on_press=self.change_sound_state)
         self.sound = SoundLoader.load(sound_path)
         self.is_playing = False
+        #image_path = os.path.join(
+        #    os.path.dirname(__file__), 'music_icons', 'circle_play.png')
+        #self.background_normal = image_path #Image(source=image_path)
 
     def play(self):
         self.sound.play()
@@ -382,7 +394,8 @@ class SearchScreen(Screen):
         self.filechooser = FileChooserListView(path=music_engine.music_root)
 
         self.explanation_window = Label(text='Select a music file', 
-                                        size_hint=(1.0, 0.2))
+                                        size_hint=(1.0, 0.2), 
+                                        font_size=EXPLANATION_FONT_SIZE)
 
         back_button = ChangeScreenButton(manager=manager,
                                          destination=select_music_root,
@@ -395,7 +408,7 @@ class SearchScreen(Screen):
         self.search_button.bind(on_press=self.search)
         self.search_button.disabled = True
 
-        save_features_button = Button(text="Save analyzation result")
+        save_features_button = Button(text="Save contents")
         save_features_button.bind(on_press=self.save_features)
 
         button_layout = BoxLayout(orientation='horizontal', 
@@ -434,12 +447,19 @@ class SearchScreen(Screen):
  
         selected_path = self.filechooser.selection[0]
         self.music_engine.set_query(selected_path)
-        print("selected query: {}".format(self.music_engine.query_filepath))
         self.search_button.disabled = False
-        self.show_message("'{}' is selected.".format(selected_path))
+        filename = os.path.basename(selected_path)
+        self.show_message("'{}' is selected.".format(filename))
 
     def search(self, instance):
-        k_nearest = self.music_engine.search()
+        try:
+            k_nearest = self.music_engine.search()
+        except Exception as e:
+            filename = os.path.basename(self.music_engine.query_filepath)
+            self.show_message(
+                "{} is not in the analyzed music directory.".format(filename))
+            return
+
         sound_path_list = [path for path, _ in k_nearest]
 
         result_window = ResultWindow(sound_path_list)

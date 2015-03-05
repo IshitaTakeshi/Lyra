@@ -16,7 +16,7 @@ from kivy.uix.listview import ListView
 from kivy.core.window import Window
 from kivy.core.audio import SoundLoader
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout 
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.popup import Popup
@@ -35,6 +35,8 @@ select_music_root = 'select_music_root'
 search_music = 'search_music'
 show_result = 'show_result'
 
+config_path = './lyra/config'
+
 HOME_DIR = os.path.expanduser('~')
 DATA_DIR = os.path.join(HOME_DIR, '.lyra')
 
@@ -44,17 +46,17 @@ if not(os.path.exists(DATA_DIR)):
     os.mkdir(DATA_DIR)
 
 #DEBUG
-DEBUG = True 
+DEBUG = True
 if(DEBUG):
     from kivy.core.text import LabelBase, DEFAULT_FONT
     from kivy.resources import resource_add_path
-     
+
 
     DEBUG_DIR = os.path.abspath('./dataset/Music/KiminoShiranaiMonogatari')
     font_dir = os.path.join(HOME_DIR, '.fonts')
 
     resource_add_path(font_dir)
-    LabelBase.register(DEFAULT_FONT, 'ipaexm.ttf')
+    LabelBase.register(DEFAULT_FONT, 'ipagp.ttf')
 
 
 class ChangeScreenButton(Button):
@@ -70,7 +72,7 @@ class ChangeScreenButton(Button):
 
 class FirstSelectionScreen(Screen):
     def __init__(self, name, manager):
-        Screen.__init__(self, name=name) 
+        Screen.__init__(self, name=name)
 
         size_hint = (0.4, 0.1)
         size = (
@@ -79,7 +81,7 @@ class FirstSelectionScreen(Screen):
         )
 
         center_x = (window_size[0]-size[0])/2
-        
+
         analyze_new_button = ChangeScreenButton(
             manager=manager,
             destination=select_music_root,
@@ -87,9 +89,9 @@ class FirstSelectionScreen(Screen):
             pos=(center_x, int(2*window_size[1]/3)-20),
             text="Analyze new"
         )
-        
+
         load_data_button = ChangeScreenButton(
-            manager=manager, 
+            manager=manager,
             destination=load_data_file,
             size_hint=size_hint,
             pos=(center_x, int(window_size[1]/3)-20),
@@ -103,16 +105,16 @@ class FirstSelectionScreen(Screen):
 class LoadDataFileScreen(Screen):
     def __init__(self, name, manager, music_engine):
         Screen.__init__(self, name=name)
-        
+
         self.music_engine = music_engine
 
         layout = BoxLayout(orientation='vertical')
 
-        self.filechooser = FileChooserListView(path=DATA_DIR, 
+        self.filechooser = FileChooserListView(path=DATA_DIR,
                                                size_hint=(1.0, 0.7))
-        
-        self.explanation_window = Label(text='Select a data file', 
-                                        size_hint=(1.0, 0.1), 
+
+        self.explanation_window = Label(text='Select a data file',
+                                        size_hint=(1.0, 0.1),
                                         font_size=EXPLANATION_FONT_SIZE,
                                         halign='center')
 
@@ -124,16 +126,16 @@ class LoadDataFileScreen(Screen):
         select_button.bind(on_press=self.select)
         self.load_button = Button(text="Load")
         self.load_button.bind(on_press=self.load)
-        self.load_button.disabled = True 
-        
-        button_layout = BoxLayout(orientation='horizontal', 
-                                  size_hint=(1.0, 0.2), 
+        self.load_button.disabled = True
+
+        button_layout = BoxLayout(orientation='horizontal',
+                                  size_hint=(1.0, 0.2),
                                   spacing=30,
                                   padding=(10, 10, 10, 10))
         button_layout.add_widget(back_button)
         button_layout.add_widget(select_button)
         button_layout.add_widget(self.load_button)
-        
+
         layout.add_widget(self.filechooser)
         layout.add_widget(self.explanation_window)
         layout.add_widget(button_layout)
@@ -147,7 +149,7 @@ class LoadDataFileScreen(Screen):
         self.explanation_window.text = message
 
     def load(self, instance):
-        selected_path = self.filechooser.selection[0] 
+        selected_path = self.filechooser.selection[0]
         if not(os.path.isfile(selected_path)):
             return
 
@@ -160,7 +162,7 @@ class LoadDataFileScreen(Screen):
 
             self.show_message(
                 "The selected file is not following the Lyra's format.")
-            return 
+            return
 
         #Move to SearchScreen
         self.manager.current = search_music
@@ -176,13 +178,13 @@ class SelectMusicRootScreen(Screen):
         else:
             self.filechooser = FileChooserListView(path=HOME_DIR)
 
-        self.explanation_window = Label(text='Select a music file', 
+        self.explanation_window = Label(text='Select a music file',
                                         size_hint=(1.0, 0.2),
-                                        font_size=EXPLANATION_FONT_SIZE, 
+                                        font_size=EXPLANATION_FONT_SIZE,
                                         halign='center')
 
-        button_layout = BoxLayout(orientation='horizontal', 
-                                  size_hint=(1.0, 0.3), 
+        button_layout = BoxLayout(orientation='horizontal',
+                                  size_hint=(1.0, 0.3),
                                   spacing=30,
                                   padding=(10, 10, 10, 10))
 
@@ -194,12 +196,12 @@ class SelectMusicRootScreen(Screen):
         select_button.bind(on_press=self.select)
         self.analyze_button = Button(text="Analyze")
 
-        self.next_button = ChangeScreenButton(manager=manager, 
+        self.next_button = ChangeScreenButton(manager=manager,
                                               destination=search_music,
                                               text="Next")
         self.next_button.disabled = True
         self.analyze_button.disabled = True
-        
+
         self.analyze_button.bind(on_press=self.analyze)
 
         button_layout.add_widget(back_button)
@@ -214,7 +216,7 @@ class SelectMusicRootScreen(Screen):
         layout.add_widget(button_layout)
 
         self.add_widget(layout)
-   
+
     def show_message(self, message):
         self.explanation_window.text = message
 
@@ -243,8 +245,8 @@ class SelectMusicRootScreen(Screen):
         except:
             self.show_message("No wav music found. Choose another directory.")
             return
-        
-        self.next_button.disabled = False 
+
+        self.next_button.disabled = False
         self.show_message("Finished")
 
 
@@ -270,7 +272,7 @@ class SaveFeaturesWindow(BoxLayout):
         save_button = Button(text="Save", size_hint=(0.2, 1.0))
         save_button.bind(on_press=self.save)
 
-        button_layout = BoxLayout(orientation="horizontal", 
+        button_layout = BoxLayout(orientation="horizontal",
                                   size_hint=(1.0, 0.1))
         button_layout.add_widget(HorizontalSpacer())
         button_layout.add_widget(self.cancel_button)
@@ -279,7 +281,7 @@ class SaveFeaturesWindow(BoxLayout):
         self.add_widget(self.filechooser)
         self.add_widget(self.text_input)
         self.add_widget(button_layout)
-    
+
     #TODO
     def on_file_selected(self, path, selection):
         print("file selected: {}".format(self.filechooser.selection))
@@ -287,7 +289,7 @@ class SaveFeaturesWindow(BoxLayout):
         filename = os.path.basename(selected_path)
         self.text_input.text = filename
 
-    def save(self, instance): 
+    def save(self, instance):
         print("current_path:{}".format(self.filechooser.path))
         current_path = self.filechooser.path
         filename = self.text_input.text
@@ -303,7 +305,7 @@ class SaveFeaturesWindow(BoxLayout):
 
         print("filepath:{}".format(filepath))
         self.music_engine.save(filepath)
-        
+
         self.close()
 
     def bind_to_close(self, on_press):
@@ -350,7 +352,7 @@ class MusicRow(SelectableView, BoxLayout):
         title = os.path.basename(sound_path)
         title_label = Label(text=title, size_hint=(0.8, 1.0))
 
-        play_button = PlayButton(sound_path=sound_path, 
+        play_button = PlayButton(sound_path=sound_path,
                                  size_hint=(0.2, 1.0))
 
         layout.add_widget(title_label)
@@ -359,6 +361,7 @@ class MusicRow(SelectableView, BoxLayout):
         self.add_widget(layout)
 
 
+"""Shows a music list in the similarity order."""
 class ResultWindow(BoxLayout):
     def __init__(self, sound_path_list):
         BoxLayout.__init__(self, orientation='vertical')
@@ -367,11 +370,11 @@ class ResultWindow(BoxLayout):
         sorted_keys = []
         for i, path in enumerate(sound_path_list):
             key = str(i)
-            sound_directory[key] = path 
+            sound_directory[key] = path
             sorted_keys.append(key)
 
-        dict_adapter = DictAdapter(sorted_keys=sorted_keys, 
-                                   data=sound_directory, 
+        dict_adapter = DictAdapter(sorted_keys=sorted_keys,
+                                   data=sound_directory,
                                    args_converter=self.list_item_args_converter,
                                    cls=MusicRow)
 
@@ -380,11 +383,11 @@ class ResultWindow(BoxLayout):
         self.close_button = Button(text="Close", size_hint=(1.0, 0.1))
         self.add_widget(list_view)
         self.add_widget(self.close_button)
-    
-    def list_item_args_converter(self, row_index, sound_path): 
-        return {'size_hint_y': None, 'height': 25, 
+
+    def list_item_args_converter(self, row_index, sound_path):
+        return {'size_hint_y': None, 'height': 25,
                 'sound_path': sound_path}
-    
+
     def bind_to_close(self, on_press):
         self.close_button.bind(on_press=on_press)
 
@@ -399,15 +402,15 @@ class SearchScreen(Screen):
         self.filechooser = FileChooserListView(path=music_engine.music_root)
         self.filechooser.bind(selection=self.on_file_selected)
 
-        self.explanation_window = Label(text='Select a music file', 
-                                        size_hint=(1.0, 0.2), 
-                                        font_size=EXPLANATION_FONT_SIZE, 
+        self.explanation_window = Label(text='Select a music file',
+                                        size_hint=(1.0, 0.2),
+                                        font_size=EXPLANATION_FONT_SIZE,
                                         halign='center')
 
         back_button = ChangeScreenButton(manager=manager,
                                          destination=select_music_root,
                                          text="Back")
-        
+
         self.search_button = Button(text="Search")
         self.search_button.bind(on_press=self.search)
         self.search_button.disabled = True
@@ -415,8 +418,8 @@ class SearchScreen(Screen):
         save_features_button = Button(text="Save contents")
         save_features_button.bind(on_press=self.save_features)
 
-        button_layout = BoxLayout(orientation='horizontal', 
-                                  size_hint=(1.0, 0.3), 
+        button_layout = BoxLayout(orientation='horizontal',
+                                  size_hint=(1.0, 0.3),
                                   spacing=30,
                                   padding=(10, 10, 10, 10))
 
@@ -435,19 +438,19 @@ class SearchScreen(Screen):
         layout.add_widget(button_layout)
 
         self.add_widget(layout)
-    
+
     def on_enter(self):
         self.filechooser.path = self.music_engine.music_root
 
     def show_message(self, message):
         self.explanation_window.text = message
-    
+
     def on_file_selected(self, path, selection):
         if(len(self.filechooser.selection) == 0):
             self.show_message("Select a file.")
             self.search_button.disabled = True
             return
- 
+
         selected_path = self.filechooser.selection[0]
         self.music_engine.set_query(selected_path)
         self.search_button.disabled = False
@@ -466,7 +469,7 @@ class SearchScreen(Screen):
         sound_path_list = [path for path, _ in k_nearest]
 
         result_window = ResultWindow(sound_path_list)
-        popup = Popup(title="Music list", content=result_window)
+        popup = Popup(title="Music list in the similarity order", content=result_window)
         result_window.bind_to_close(on_press=popup.dismiss)
         popup.open()
 
@@ -480,24 +483,24 @@ class SearchScreen(Screen):
 class MainApp(App):
     def __init__(self, **kwargs):
         App.__init__(self, **kwargs)
-        self.music_engine = MLInterface()
+        self.music_engine = MLInterface(config_path)
 
     def build(self):
         manager = ScreenManager()
-        
+
         manager.add_widget(
             FirstSelectionScreen(first_selection, manager))
-        
+
         manager.add_widget(
             LoadDataFileScreen(load_data_file, manager, self.music_engine))
 
         manager.add_widget(
-            SelectMusicRootScreen(select_music_root, manager, 
+            SelectMusicRootScreen(select_music_root, manager,
                                   self.music_engine))
 
         manager.add_widget(
             SearchScreen(search_music, manager, self.music_engine))
-        
+
         #manager.add_widget(
         #    ResultScreen(show_result, manager, self.music_engine))
         return manager

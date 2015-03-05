@@ -4,10 +4,11 @@ from copy import copy
 
 import numpy as np
 
-from .features import FeatureExtractor
+from .features import MFCCExtractor
 from . import utils
 from .path import get_wave_paths
 from .autoencoder import Autoencoder
+from lyra.util.config import Config
 
 
 n_iter = 40
@@ -29,31 +30,31 @@ def compress_(path_feature_map, learning_rate):
     #print(feature_vectors)
 
     autoencoder = Autoencoder(
-        feature_vectors, 
-        n_visible=feature_vectors.shape[1], 
+        feature_vectors,
+        n_visible=feature_vectors.shape[1],
         n_hidden=n_components,
         learning_rate=learning_rate
     )
 
     for epoch in range(n_iter):
-        autoencoder.train() 
+        autoencoder.train()
 
     for path, vector in path_feature_map.items():
         v = autoencoder.get_hidden_values(vector)
         path_feature_map[path] = v
-    
+
     error = autoencoder.negative_log_likelihood()
     error = abs(error)
     return path_feature_map, error
 
 
 def extract_(args):
-    def extraction_process_(paths, n_frames, n_blocks):
+    def extraction_process_(paths, config_path):
         """
         An single process of feature extraction.
         """
 
-        extractor = FeatureExtractor(n_frames, n_blocks) 
+        extractor = MFCCExtractor(config_path)
 
         path_feature_map = {}
         for i, filepath in enumerate(paths):
@@ -64,33 +65,34 @@ def extract_(args):
     return extraction_process_(*args)
 
 
-#TODO Rename this or features.Featureextractor
 class Extractor(object):
-    def __init__(self, n_frames, n_blocks, learning_rate, 
-                 n_cores=None, verbose=False):
+    def __init__(self, config_path, verbose=False):
         """
         All cores used if n_cores is None
         """
-        self.n_frames = n_frames
-        self.n_blocks = n_blocks
-        
-        if(n_cores is None):
-            n_cores = cpu_count()
 
+        self.config_path = config_path
+        config = Config(config_path, 'EXTRACTOR')
+
+        n_cores = config.n_cores
+        if(n_cores is None or n_cores > cpu_count()):
+            n_cores = cpu_count()
         self.n_cores = n_cores
-        self.learning_rate = learning_rate
-    
+
+        self.learning_rate = config.learning_rate
+
     def extract_(self, music_root):
-        paths = get_wave_paths(music_root)
-        if(len(paths) == 0):
+        wav_paths = get_wave_paths(music_root)
+        if(len(wav_paths) == 0):
             raise ValueError("No music files found.")
 
-        paths_ = np.array_split(paths, self.n_cores)
-        paths_ = [paths.tolist() for paths in paths_]
+        #divide data and process each
+        paths_ = np.array_split(wav_paths, self.n_cores)
+        paths_ = [wav_paths.tolist() for wav_paths in paths_]
 
         args = []
-        for paths in paths_:
-            args.append([paths, self.n_frames, self.n_blocks])
+        for wav_paths in paths_:
+            args.append([wav_paths, self.config_path])
 
         pool = Pool(self.n_cores)
         dicts = pool.map(extract_, args)
@@ -99,7 +101,7 @@ class Extractor(object):
         return path_feature_map
 
     def compress_(self, path_feature_map):
-        path_feature_map, error = compress_(path_feature_map, 
+        path_feature_map, error = compress_(path_feature_map,
                                             self.learning_rate)
         return path_feature_map, error
 
@@ -109,18 +111,18 @@ class Extractor(object):
         """
 
         path_feature_map = self.extract_(music_root)
-        path_feature_map, error = self.compress_(path_feature_map)
-        return path_feature_map, error
+        #path_feature_map, error = self.compress_(path_feature_map)
+        return path_feature_map
 
 
 class GridSearch(object):
     """
-    Evaluates parameters 
+    Evaluates parameters
     """
-    def __init__(self, music_root, n_frames, n_blocks, 
+    def __init__(self, music_root, config_path,
                  n_trials=1, verbose=False):
         paths = get_wave_paths(music_root)
-        extractor = Extractor(n_frames, n_blocks)
+        extractor = Extractor(config_path)
         self.path_feature_map = extractor.extract_(music_root)
         self.n_trials = n_trials
         self.verbose = verbose
@@ -128,7 +130,7 @@ class GridSearch(object):
     def try_(self, learning_rate):
         total_error = 0
         for i in range(self.n_trials):
-            path_feature_map, error = compress_(self.path_feature_map, 
+            path_feature_map, error = compress_(self.path_feature_map,
                                                 learning_rate)
             total_error += error
         return total_error
@@ -143,9 +145,9 @@ class GridSearch(object):
             error = self.try_(learning_rate)
             errors.append(error)
             if(error < min_error):
-                min_error = error 
+                min_error = error
                 argmin = learning_rate
-            
+
             if(self.verbose):
                 print("learning rate:{:.10f}"
                       " error:{:.10f}".format(learning_rate, error))

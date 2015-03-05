@@ -1,4 +1,4 @@
 Lyra
 ====
 
-The music similarity estimation system
+The music similarity estimation system.

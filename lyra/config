@@ -1,0 +1,9 @@
+[EXTRACTOR]
+learning_rate=0.00053
+n_cores = None
+
+[MFCC]
+n_frames = 20
+n_blocks = 40
+n_cepstrum = 16
+n_filters = 40

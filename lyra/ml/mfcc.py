@@ -21,17 +21,17 @@ def mel_to_hz(frequency):
 
 def pre_emphasis_filter(sound, p=0.97):
 # Copyright (c) 2008 Cournapeau David
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,7 +43,7 @@ def pre_emphasis_filter(sound, p=0.97):
 
 
 class MFCC(object):
-    def __init__(self, n_cepstrum=8, n_filters=26):
+    def __init__(self, n_cepstrum, n_filters):
         self.n_cepstrum = n_cepstrum
         self.n_filters = n_filters
         #for dct3 transform
@@ -97,7 +97,7 @@ class MFCC(object):
             matrix[k] = np.cos(c * np.arange(0.5, self.n_filters+0.5, 1.0))
         matrix[:, 0] = matrix[:, 0] * 0.5
         return matrix
-    
+
     #TODO Rename
     def calc(self, sound_segment):
         segment_length = len(sound_segment)
